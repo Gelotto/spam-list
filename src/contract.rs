@@ -1,17 +1,16 @@
-#[cfg(not(feature = "library"))]
 use crate::error::ContractError;
 use crate::execute;
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, MigrateMsg};
+use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 use crate::query;
 use crate::state;
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response};
 use cw2::set_contract_version;
 
-const CONTRACT_NAME: &str = "crates.io:cw-contract-template";
+const CONTRACT_NAME: &str = "crates.io:spam";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-#[cfg_attr(not(feature = "library"), entry_point)]
+#[entry_point]
 pub fn instantiate(
   deps: DepsMut,
   env: Env,
@@ -23,7 +22,7 @@ pub fn instantiate(
   Ok(Response::new().add_attribute("action", "instantiate"))
 }
 
-#[cfg_attr(not(feature = "library"), entry_point)]
+#[entry_point]
 pub fn execute(
   deps: DepsMut,
   env: Env,
@@ -31,25 +30,38 @@ pub fn execute(
   msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
   match msg {
-    ExecuteMsg::TransferOwnership { new_owner } => {
-      execute::transfer_ownership(deps, env, info, &new_owner)
+    ExecuteMsg::Report {
+      address,
+      comment,
+      tags,
+      tx_hashes,
+    } => execute::report(deps, env, info, address, comment, tags, tx_hashes),
+    ExecuteMsg::Appeal { address, argument } => execute::appeal(deps, env, info, address, argument),
+    ExecuteMsg::Forgive { appellant, address } => {
+      execute::forgive(deps, env, info, address, appellant)
     },
   }
 }
 
-#[cfg_attr(not(feature = "library"), entry_point)]
+#[entry_point]
 pub fn query(
   deps: Deps,
   _env: Env,
   msg: QueryMsg,
-) -> StdResult<Binary> {
+) -> Result<Binary, ContractError> {
   let result = match msg {
-    QueryMsg::Select { fields } => to_binary(&query::select(deps, fields)?),
+    QueryMsg::Select { fields, wallet } => to_binary(&query::select(deps, fields, wallet)?),
+    QueryMsg::Details { address } => to_binary(&query::details(deps, address)?),
+    QueryMsg::Paginate {
+      cursor,
+      limit,
+      reversed,
+    } => to_binary(&query::paginate(deps, cursor, limit, reversed)?),
   }?;
   Ok(result)
 }
 
-#[cfg_attr(not(feature = "library"), entry_point)]
+#[entry_point]
 pub fn migrate(
   _deps: DepsMut,
   _env: Env,

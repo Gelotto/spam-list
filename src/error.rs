@@ -6,9 +6,27 @@ pub enum ContractError {
   #[error("{0}")]
   Std(#[from] StdError),
 
+  #[error("SpamEntryNotFound")]
+  SpamEntryNotFound,
+
+  #[error("AppealNotFound")]
+  AppealNotFound,
+
+  #[error("AppealAlreadyAccepted")]
+  AppealAlreadyAccepted,
+
   #[error("NotAuthorized")]
-  NotAuthorized {},
+  NotAuthorized,
 
   #[error("ValidationError")]
-  ValidationError {},
+  ValidationError,
+
+  #[error("DuplicateReport")]
+  DuplicateReport,
+
+  #[error("TooManyTags")]
+  TooManyTags,
+
+  #[error("InvalidTag")]
+  InvalidTag,
 }
